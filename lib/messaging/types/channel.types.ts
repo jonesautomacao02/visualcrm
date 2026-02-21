@@ -146,6 +146,12 @@ export interface MessagingChannel {
 export interface ChannelSettings {
   /** Webhook URL for inbound messages */
   webhookUrl?: string;
+  /**
+   * Human-readable phone number (e.g. "+55 11 99999-9999").
+   * Backfilled from Meta's display_phone_number on first webhook receipt.
+   * Use this instead of externalIdentifier (which stores the numeric phoneNumberId).
+   */
+  displayPhone?: string;
   /** Auto-reply when offline */
   autoReplyEnabled?: boolean;
   autoReplyMessage?: string;

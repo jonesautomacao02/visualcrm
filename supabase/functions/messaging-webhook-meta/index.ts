@@ -493,6 +493,17 @@ Deno.serve(async (req) => {
   const change = payload.entry[0].changes[0];
   const value = change.value;
 
+  // Opportunistically backfill display_phone_number into channel settings.
+  // Every Meta webhook carries metadata.display_phone_number (e.g. "+55 11 99999-9999").
+  // We only write once — if settings.displayPhone is already set, skip.
+  const displayPhone = value.metadata?.display_phone_number;
+  if (displayPhone && !(settings as Record<string, unknown>)?.displayPhone) {
+    await supabase
+      .from("messaging_channels")
+      .update({ settings: { ...(settings as Record<string, unknown>), displayPhone } })
+      .eq("id", channelId);
+  }
+
   // Generate stable event ID for deduplication
   // For status updates: status_{wamid}_{status}
   // For messages: msg_{wamid}

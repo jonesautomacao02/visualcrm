@@ -293,7 +293,7 @@ function ChannelCard({
                 {typeInfo?.label} · {channel.provider}
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                {channel.externalIdentifier}
+                {channel.settings?.displayPhone || channel.externalIdentifier}
               </p>
               {channel.businessUnitName && (
                 <div className="flex items-center gap-1 mt-1">
