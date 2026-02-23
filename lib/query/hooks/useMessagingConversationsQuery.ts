@@ -376,14 +376,22 @@ export function useMarkConversationRead() {
  * Resolve (close) a conversation.
  */
 export function useResolveConversation() {
-  const updateConversation = useUpdateConversation();
-
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (conversationId: string) => {
-      return updateConversation.mutateAsync({
-        conversationId,
-        input: { status: 'resolved' },
-      });
+    mutationFn: async (conversationId: string): Promise<MessagingConversation> => {
+      const supabase = getClient();
+      const { data, error } = await supabase
+        .from('messaging_conversations')
+        .update({ status: 'resolved' as ConversationStatus, updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+        .select()
+        .single();
+      if (error) throw error;
+      return transformConversation(data);
+    },
+    onSuccess: (conversation) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.detail(conversation.id) });
     },
   });
 }
@@ -392,14 +400,22 @@ export function useResolveConversation() {
  * Reopen a conversation.
  */
 export function useReopenConversation() {
-  const updateConversation = useUpdateConversation();
-
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (conversationId: string) => {
-      return updateConversation.mutateAsync({
-        conversationId,
-        input: { status: 'open' },
-      });
+    mutationFn: async (conversationId: string): Promise<MessagingConversation> => {
+      const supabase = getClient();
+      const { data, error } = await supabase
+        .from('messaging_conversations')
+        .update({ status: 'open' as ConversationStatus, updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+        .select()
+        .single();
+      if (error) throw error;
+      return transformConversation(data);
+    },
+    onSuccess: (conversation) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.detail(conversation.id) });
     },
   });
 }
@@ -408,8 +424,7 @@ export function useReopenConversation() {
  * Assign a conversation to a user.
  */
 export function useAssignConversation() {
-  const updateConversation = useUpdateConversation();
-
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
       conversationId,
@@ -417,11 +432,24 @@ export function useAssignConversation() {
     }: {
       conversationId: string;
       userId: string | null;
-    }) => {
-      return updateConversation.mutateAsync({
-        conversationId,
-        input: { assignedUserId: userId },
-      });
+    }): Promise<MessagingConversation> => {
+      const supabase = getClient();
+      const { data, error } = await supabase
+        .from('messaging_conversations')
+        .update({
+          assigned_user_id: userId,
+          assigned_at: userId ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', conversationId)
+        .select()
+        .single();
+      if (error) throw error;
+      return transformConversation(data);
+    },
+    onSuccess: (conversation) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messagingConversations.detail(conversation.id) });
     },
   });
 }
