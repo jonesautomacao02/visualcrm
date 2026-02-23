@@ -10,7 +10,7 @@ import { Deal, DealView, DealItem, Company, Contact, Board } from '@/types';
 import { dealsService } from '@/lib/supabase';
 import { useAuth } from '../AuthContext';
 import { queryKeys, DEALS_VIEW_KEY } from '@/lib/query';
-import { useDeals as useTanStackDealsQuery } from '@/lib/query/hooks/useDealsQuery';
+import { useDeals as useTanStackDealsQuery, useCreateDeal } from '@/lib/query/hooks/useDealsQuery';
 
 interface DealsContextType {
   // Raw data (agora vem direto do TanStack Query)
@@ -43,6 +43,7 @@ const DealsContext = createContext<DealsContextType | undefined>(undefined);
 export const DealsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const createDealMutation = useCreateDeal();
 
   // ============================================
   // TanStack Query como fonte única de verdade
@@ -70,27 +71,23 @@ export const DealsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.error('Usuário não autenticado');
         return null;
       }
-      const { data, error: addError } = await dealsService.create(deal);
-
-      if (addError) {
-        console.error('Erro ao criar deal:', addError.message);
+      try {
+        // Delega para useCreateDeal que já faz optimistic insert em DEALS_VIEW_KEY
+        // updatedAt é omitido: CreateDealInput não o aceita, e mutationFn já o define
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { updatedAt: _updatedAt, ...dealWithoutUpdatedAt } = deal as Deal;
+        const data = await createDealMutation.mutateAsync({
+          ...dealWithoutUpdatedAt,
+          isWon: (deal as Deal & { isWon?: boolean }).isWon ?? false,
+          isLost: (deal as Deal & { isLost?: boolean }).isLost ?? false,
+        });
+        return data;
+      } catch (error) {
+        console.error('Erro ao criar deal:', (error as Error).message);
         return null;
       }
-
-      // NÃO invalidar deals aqui! O CRMContext já fez insert otimista e o Realtime
-      // também adiciona ao cache. invalidateQueries causaria um refetch que poderia
-      // sobrescrever o cache otimista com dados desatualizados (eventual consistency).
-      // #region agent log
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[DealsContext.addDeal] ✅ Skipping invalidateQueries (cache managed by optimistic+Realtime)`, { dealId: data?.id?.slice(0,8) });
-      }
-      // #endregion
-      // Apenas dashboard stats pode ser invalidado (não afeta deals cache)
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.stats });
-
-      return data;
     },
-    [profile, queryClient]
+    [profile, createDealMutation]
   );
 
   const updateDeal = useCallback(async (id: string, updates: Partial<Deal>) => {
