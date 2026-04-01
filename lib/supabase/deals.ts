@@ -36,7 +36,7 @@ async function getCurrentOrganizationId(): Promise<string | null> {
     .from('profiles')
     .select('organization_id')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (error) return null;
 
@@ -293,7 +293,7 @@ export const dealsService = {
         return { data: null, error: new Error('Supabase não configurado') };
       }
       const [dealResult, itemsResult] = await Promise.all([
-        supabase.from('deals').select('*').eq('id', id).single(),
+        supabase.from('deals').select('*').eq('id', id).maybeSingle(),
         supabase.from('deal_items').select('id, organization_id, deal_id, product_id, name, quantity, price, unit, discount, total, created_at, updated_at').eq('deal_id', id),
       ]);
 
@@ -340,7 +340,7 @@ export const dealsService = {
         .from('boards')
         .select('id, organization_id')
         .eq('id', boardId)
-        .single();
+        .maybeSingle();
 
       if (boardCheckError || !boardExists) {
         return {

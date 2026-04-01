@@ -25,7 +25,7 @@ async function getCurrentOrganizationId(): Promise<string | null> {
     .from('profiles')
     .select('organization_id')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
   return (profile as any)?.organization_id ?? null;
 }
 
