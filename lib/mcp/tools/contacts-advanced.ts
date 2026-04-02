@@ -187,7 +187,7 @@ export function registerContactsAdvancedTools(server: McpServer) {
       let query = getDb()
         .from('contacts')
         .select(
-          'id, name, email, phone, company_name, source, metadata, created_at, updated_at'
+          'id, name, email, phone, company_name, source, created_at, updated_at'
         )
         .eq('organization_id', ctx.organizationId)
         .order('created_at', { ascending: false })

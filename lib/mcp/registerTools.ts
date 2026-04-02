@@ -20,7 +20,10 @@ export function registerExistingCrmTools(server: McpServer) {
     if (!catalog) continue;
 
     const zodSchema = (t as any).inputSchema;
-    const flatShape = zodSchema?._def?.shape?.() ?? {};
+    // Zod v3: shape can be a function (ZodObject) or absent (other schema types).
+    // Extract the inner shape for mcp-handler's flat inputSchema format.
+    const shapeDef = zodSchema?._def?.shape;
+    const flatShape = typeof shapeDef === 'function' ? shapeDef() : (shapeDef ?? {});
 
     server.registerTool(
       catalog.name,
