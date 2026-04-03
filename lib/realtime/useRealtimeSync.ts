@@ -295,6 +295,13 @@ export function useRealtimeSync(
                     const keysToFlush = Array.from(pendingInvalidationsRef.current);
                     pendingInvalidationsRef.current.clear();
                     keysToFlush.forEach((queryKey) => {
+                      // Skip conversations-list invalidation while a deletion is in-progress.
+                      // Same guard as the outbound path — prevents an inbound message arriving
+                      // during the delete window from triggering a refetch that re-shows the
+                      // deleted conversation before the realtime DELETE event lowers the guard.
+                      if (pendingDeletionIds.size > 0 && queryKey === queryKeys.messagingConversations.all) {
+                        return;
+                      }
                       queryClient.invalidateQueries({ queryKey, exact: false, refetchType: 'all' });
                     });
                   });
