@@ -611,7 +611,7 @@ export function BusinessUnitsSection() {
       setEditingUnit(null);
     } catch (error) {
       addToast(
-        error instanceof Error ? error.message : 'Erro ao salvar unidade',
+        (error as any)?.message ?? 'Erro ao salvar unidade',
         'error'
       );
     }
