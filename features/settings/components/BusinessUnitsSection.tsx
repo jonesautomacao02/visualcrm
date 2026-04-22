@@ -601,7 +601,10 @@ export function BusinessUnitsSection() {
         });
         addToast('Unidade atualizada com sucesso!', 'success');
       } else {
-        await createMutation.mutateAsync(input as CreateBusinessUnitInput);
+        await createMutation.mutateAsync({
+          ...(input as CreateBusinessUnitInput),
+          organizationId: profile!.organization_id,
+        });
         addToast('Unidade criada com sucesso!', 'success');
       }
       setIsFormOpen(false);
