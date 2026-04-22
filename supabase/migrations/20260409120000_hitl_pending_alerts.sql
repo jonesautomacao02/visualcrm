@@ -65,6 +65,8 @@ COMMENT ON COLUMN ai_pending_stage_advances.alert_triggered_at IS
 -- ============================================================================
 -- Verifica pending_advances antigos (>24h) e cria entries em deal_activities
 
+DROP FUNCTION IF EXISTS public.trigger_hitl_alerts();
+
 CREATE OR REPLACE FUNCTION public.trigger_hitl_alerts()
   RETURNS TABLE(alert_count BIGINT, affected_deals BIGINT) AS $$
 DECLARE
@@ -150,6 +152,8 @@ COMMENT ON FUNCTION public.trigger_hitl_alerts() IS
 -- ============================================================================
 -- Marca como 'expired' as pending_advances além de 24h
 
+DROP FUNCTION IF EXISTS public.expire_old_pending_advances();
+
 CREATE OR REPLACE FUNCTION public.expire_old_pending_advances()
   RETURNS TABLE(expired_count BIGINT) AS $$
 DECLARE
@@ -196,7 +200,7 @@ BEGIN
     'SELECT public.expire_old_pending_advances();'
   );
   RAISE NOTICE 'Created cron job: expire-hitl-pending (every 12 hours)';
-EXCEPTION WHEN undefined_object THEN
+EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'pg_cron extension not available. Jobs must be triggered manually.
     Call trigger_hitl_alerts() and expire_old_pending_advances() from application code.';
 END $$;
