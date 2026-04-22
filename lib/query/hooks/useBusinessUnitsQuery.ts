@@ -185,24 +185,18 @@ export function useBusinessUnitMembers(unitId: string | undefined) {
  */
 export function useCreateBusinessUnit() {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
 
   return useMutation({
     mutationFn: async (input: CreateBusinessUnitInput): Promise<BusinessUnit> => {
       const supabase = getClient();
 
-      // Get current user's org
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', user?.id ?? '')
-        .single();
-
-      if (!profile?.organization_id) {
+      const organizationId = profile?.organization_id;
+      if (!organizationId) {
         throw new Error('Organization not found');
       }
 
-      const dbData = toDb(input, profile.organization_id);
+      const dbData = toDb(input, organizationId);
 
       const { data, error } = await supabase
         .from('business_units')
