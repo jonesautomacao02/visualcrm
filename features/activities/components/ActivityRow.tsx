@@ -1,8 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
-import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2 } from 'lucide-react';
+import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2, UserCheck } from 'lucide-react';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
-import { Activity, Deal, Contact, Company } from '@/types';
+import { Activity, ActivityTaskStatus, Deal, Contact, Company } from '@/types';
+
+const TASK_STATUS_STYLES: Record<ActivityTaskStatus, { label: string; className: string }> = {
+  aberto:       { label: 'Aberto',       className: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' },
+  em_andamento: { label: 'Em Andamento', className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' },
+  impedimento:  { label: 'Impedimento',  className: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' },
+  concluido:    { label: 'Concluído',    className: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' },
+};
 
 interface ActivityRowProps {
     activity: Activity;
@@ -160,6 +167,11 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
                             ATRASADO
                         </span>
                     )}
+                    {activity.taskStatus && activity.taskStatus !== 'aberto' && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TASK_STATUS_STYLES[activity.taskStatus]?.className ?? ''}`}>
+                            {TASK_STATUS_STYLES[activity.taskStatus]?.label}
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                     {deal && (
@@ -188,6 +200,12 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
                         <Clock size={14} />
                         {formatRelativeTime(activity.date)}
                     </span>
+                    {activity.assignedToName && (
+                        <span className="flex items-center gap-1.5 text-primary-600 dark:text-primary-400">
+                            <UserCheck size={14} />
+                            {activity.assignedToName}
+                        </span>
+                    )}
                 </div>
             </div>
 

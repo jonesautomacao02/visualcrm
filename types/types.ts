@@ -259,6 +259,8 @@ export interface DealView extends Deal {
   companyName?: string;
 }
 
+export type ActivityTaskStatus = 'aberto' | 'em_andamento' | 'impedimento' | 'concluido';
+
 export interface Activity {
   id: string;
   organizationId?: OrganizationId; // Tenant FK (for RLS) - optional during migration
@@ -279,6 +281,12 @@ export interface Activity {
     avatar: string;
   };
   completed: boolean;
+  /** ID do membro da equipe responsável pela tarefa. */
+  assignedToId?: string;
+  /** Nome do membro responsável (denormalizado para exibição). */
+  assignedToName?: string;
+  /** Status da tarefa. */
+  taskStatus?: ActivityTaskStatus;
 }
 
 export interface DashboardStats {

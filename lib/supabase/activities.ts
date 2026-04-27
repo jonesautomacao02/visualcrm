@@ -70,11 +70,16 @@ export interface DbActivity {
   created_at: string;
   /** ID do dono/responsável. */
   owner_id: string | null;
+  /** ID do membro da equipe responsável pela tarefa. */
+  assigned_to_id?: string | null;
+  /** Status da tarefa. */
+  task_status?: string | null;
 }
 
-// Interface auxiliar para o retorno do Supabase com o join
+// Interface auxiliar para o retorno do Supabase com os joins
 interface DbActivityWithDeal extends DbActivity {
   deals?: { title: string } | null;
+  assigned_to?: { id: string; name: string | null } | null;
 }
 
 /**
@@ -97,6 +102,9 @@ const transformActivity = (db: DbActivityWithDeal): Activity => ({
   participantContactIds: (db as any).participant_contact_ids || [],
   dealTitle: db.deals?.title || '',
   user: { name: 'Você', avatar: '' }, // Will be enriched later
+  assignedToId: db.assigned_to_id || undefined,
+  assignedToName: db.assigned_to?.name || undefined,
+  taskStatus: (db.task_status as Activity['taskStatus']) || 'aberto',
 });
 
 /**
@@ -117,6 +125,8 @@ const transformActivityToDb = (activity: Partial<Activity>): Partial<DbActivity>
   if (activity.contactId !== undefined) db.contact_id = sanitizeUUID(activity.contactId);
   if (activity.clientCompanyId !== undefined) (db as any).client_company_id = sanitizeUUID(activity.clientCompanyId);
   if (activity.participantContactIds !== undefined) (db as any).participant_contact_ids = activity.participantContactIds || [];
+  if (activity.assignedToId !== undefined) (db as any).assigned_to_id = sanitizeUUID(activity.assignedToId) || null;
+  if (activity.taskStatus !== undefined) (db as any).task_status = activity.taskStatus;
 
   return db;
 };
@@ -136,7 +146,8 @@ export const activitiesService = {
         .from('activities')
         .select(`
           *,
-          deals:deal_id (title)
+          deals:deal_id (title),
+          assigned_to:assigned_to_id (id, name)
         `)
         .order('date', { ascending: false })
         .limit(1000); // Safety limit for non-paginated access
@@ -173,6 +184,8 @@ export const activitiesService = {
         contact_id: sanitizeUUID(activity.contactId),
         client_company_id: sanitizeUUID(activity.clientCompanyId),
         participant_contact_ids: activity.participantContactIds || [],
+        assigned_to_id: sanitizeUUID(activity.assignedToId) || null,
+        task_status: activity.taskStatus || 'aberto',
         ...(organizationId ? { organization_id: organizationId } : {}),
       };
 
@@ -190,6 +203,13 @@ export const activitiesService = {
         }
         if (code === '42703' && msg.includes('participant_contact_ids')) {
           delete insertData.participant_contact_ids;
+          const retry = await sb.from('activities').insert(insertData).select().single();
+          if (retry.error) return { data: null, error: retry.error as any };
+          return { data: transformActivity(retry.data as DbActivity), error: null };
+        }
+        if (code === '42703' && msg.includes('assigned_to_id')) {
+          delete insertData.assigned_to_id;
+          delete insertData.task_status;
           const retry = await sb.from('activities').insert(insertData).select().single();
           if (retry.error) return { data: null, error: retry.error as any };
           return { data: transformActivity(retry.data as DbActivity), error: null };
@@ -229,6 +249,11 @@ export const activitiesService = {
         }
         if (code === '42703' && msg.includes('participant_contact_ids')) {
           const { participant_contact_ids, ...rest } = dbUpdates as any;
+          const retry = await sb.from('activities').update(rest).eq('id', id);
+          return { error: retry.error as any };
+        }
+        if (code === '42703' && msg.includes('assigned_to_id')) {
+          const { assigned_to_id, task_status, ...rest } = dbUpdates as any;
           const retry = await sb.from('activities').update(rest).eq('id', id);
           return { error: retry.error as any };
         }

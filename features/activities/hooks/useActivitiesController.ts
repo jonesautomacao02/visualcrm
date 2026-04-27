@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
-import { Activity } from '@/types';
+import { Activity, ActivityTaskStatus } from '@/types';
 import {
   useActivities,
   useCreateActivity,
@@ -40,6 +40,7 @@ export const useActivitiesController = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<Activity['type'] | 'ALL'>('ALL');
+  const [filterTaskStatus, setFilterTaskStatus] = useState<ActivityTaskStatus | 'ALL'>('ALL');
   const [dateFilter, setDateFilter] = useState<'ALL' | 'overdue' | 'today' | 'upcoming'>('ALL');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,6 +67,8 @@ export const useActivitiesController = () => {
     time: '09:00',
     description: '',
     dealId: '',
+    assignedToId: '',
+    taskStatus: 'aberto' as ActivityTaskStatus,
   });
 
   const isLoading = activitiesLoading || dealsLoading || contactsLoading || companiesLoading;
@@ -93,6 +96,7 @@ export const useActivitiesController = () => {
       .filter(({ activity, ts }) => {
         const matchesSearch = (activity.title || '').toLowerCase().includes(q);
         const matchesType = filterType === 'ALL' || activity.type === filterType;
+        const matchesStatus = filterTaskStatus === 'ALL' || activity.taskStatus === filterTaskStatus;
         const isPending = !activity.completed;
 
         const matchesDateFilter =
@@ -104,12 +108,12 @@ export const useActivitiesController = () => {
                 ? isPending && ts >= todayTs && ts < tomorrowTs
                 : isPending && ts >= tomorrowTs;
 
-        return matchesSearch && matchesType && matchesDateFilter;
+        return matchesSearch && matchesType && matchesStatus && matchesDateFilter;
       })
       // Performance: sort by numeric timestamp (avoid `new Date(...)` in comparator).
       .sort((a, b) => a.ts - b.ts)
       .map(({ activity }) => activity);
-  }, [activities, dateBoundaries, searchTerm, filterType, dateFilter]);
+  }, [activities, dateBoundaries, searchTerm, filterType, filterTaskStatus, dateFilter]);
 
   const handleNewActivity = () => {
     setEditingActivity(null);
@@ -120,6 +124,8 @@ export const useActivitiesController = () => {
       time: '09:00',
       description: '',
       dealId: '',
+      assignedToId: '',
+      taskStatus: 'aberto',
     });
     setIsModalOpen(true);
   };
@@ -134,6 +140,8 @@ export const useActivitiesController = () => {
       time: date.toTimeString().slice(0, 5),
       description: activity.description || '',
       dealId: activity.dealId,
+      assignedToId: activity.assignedToId || '',
+      taskStatus: activity.taskStatus || 'aberto',
     });
     setIsModalOpen(true);
   };
@@ -190,6 +198,8 @@ export const useActivitiesController = () => {
             contactId: selectedContact?.id || '',
             clientCompanyId,
             participantContactIds,
+            assignedToId: formData.assignedToId || undefined,
+            taskStatus: formData.taskStatus,
           },
         },
         {
@@ -214,6 +224,8 @@ export const useActivitiesController = () => {
             dealTitle: selectedDeal?.title || '',
             completed: false,
             user: { name: 'Eu', avatar: '' },
+            assignedToId: formData.assignedToId || undefined,
+            taskStatus: formData.taskStatus,
           },
         },
         {
@@ -236,6 +248,8 @@ export const useActivitiesController = () => {
     setSearchTerm,
     filterType,
     setFilterType,
+    filterTaskStatus,
+    setFilterTaskStatus,
     dateFilter,
     setDateFilter,
     currentDate,

@@ -22,6 +22,8 @@ export const ActivitiesPage: React.FC = () => {
         setSearchTerm,
         filterType,
         setFilterType,
+        filterTaskStatus,
+        setFilterTaskStatus,
         dateFilter,
         currentDate,
         setCurrentDate,
@@ -90,6 +92,8 @@ export const ActivitiesPage: React.FC = () => {
                         setSearchTerm={setSearchTerm}
                         filterType={filterType}
                         setFilterType={setFilterType}
+                        filterTaskStatus={filterTaskStatus}
+                        setFilterTaskStatus={setFilterTaskStatus}
                     />
                     <ActivitiesList
                         activities={filteredActivities}

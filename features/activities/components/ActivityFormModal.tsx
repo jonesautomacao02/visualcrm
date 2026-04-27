@@ -1,6 +1,8 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { Activity, Deal } from '@/types';
+import { Activity, ActivityTaskStatus } from '@/types';
+import { Deal } from '@/types';
+import { useOrgMembersQuery } from '@/lib/query/hooks/useOrgMembersQuery';
 
 interface ActivityFormData {
   title: string;
@@ -9,6 +11,8 @@ interface ActivityFormData {
   time: string;
   description: string;
   dealId: string;
+  assignedToId: string;
+  taskStatus: ActivityTaskStatus;
 }
 
 interface ActivityFormModalProps {
@@ -21,27 +25,15 @@ interface ActivityFormModalProps {
   deals: Deal[];
 }
 
+const TASK_STATUS_OPTIONS: { value: ActivityTaskStatus; label: string; color: string }[] = [
+  { value: 'aberto',       label: 'Aberto',       color: 'text-slate-500' },
+  { value: 'em_andamento', label: 'Em Andamento',  color: 'text-blue-500'  },
+  { value: 'impedimento',  label: 'Impedimento',   color: 'text-red-500'   },
+  { value: 'concluido',    label: 'Concluído',     color: 'text-green-500' },
+];
+
 /**
  * Componente React `ActivityFormModal`.
- *
- * @param {ActivityFormModalProps} {
-  isOpen,
-  onClose,
-  onSubmit,
-  formData,
-  setFormData,
-  editingActivity,
-  deals,
-} - Parâmetro `{
-  isOpen,
-  onClose,
-  onSubmit,
-  formData,
-  setFormData,
-  editingActivity,
-  deals,
-}`.
- * @returns {Element | null} Retorna um valor do tipo `Element | null`.
  */
 export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
   isOpen,
@@ -52,12 +44,13 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
   editingActivity,
   deals,
 }) => {
+  const { data: members = [] } = useOrgMembersQuery();
+
   React.useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
-    // passive: true porque não usamos preventDefault() - permite scroll mais fluido
     document.addEventListener('keydown', handleEscape, { passive: true });
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
@@ -68,7 +61,6 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     <div
       className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
       onClick={(e) => {
-        // Close only when clicking the backdrop (outside the panel).
         if (e.target === e.currentTarget) onClose();
       }}
     >
@@ -88,6 +80,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           </button>
         </div>
         <form onSubmit={onSubmit} className="p-5 space-y-4 overflow-auto pb-[calc(1.25rem+var(--app-safe-area-bottom,0px))]">
+          {/* Título */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Título</label>
             <input
@@ -100,15 +93,14 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             />
           </div>
 
+          {/* Tipo + Negócio */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo</label>
               <select
                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
                 value={formData.type}
-                onChange={e =>
-                  setFormData({ ...formData, type: e.target.value as Activity['type'] })
-                }
+                onChange={e => setFormData({ ...formData, type: e.target.value as Activity['type'] })}
               >
                 <option value="CALL">Ligação</option>
                 <option value="MEETING">Reunião</option>
@@ -136,6 +128,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             </div>
           </div>
 
+          {/* Data + Hora */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
@@ -159,6 +152,42 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             </div>
           </div>
 
+          {/* Responsável + Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                Responsável
+              </label>
+              <select
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+                value={formData.assignedToId}
+                onChange={e => setFormData({ ...formData, assignedToId: e.target.value })}
+              >
+                <option value="">Sem responsável</option>
+                {members.map(member => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                Status
+              </label>
+              <select
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+                value={formData.taskStatus}
+                onChange={e => setFormData({ ...formData, taskStatus: e.target.value as ActivityTaskStatus })}
+              >
+                {TASK_STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Descrição */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
               Descrição
