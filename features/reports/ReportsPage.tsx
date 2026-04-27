@@ -8,6 +8,7 @@ import { useDashboardMetrics, PeriodFilter, COMPARISON_LABELS } from '../dashboa
 import { PeriodFilterSelect } from '@/components/filters/PeriodFilterSelect';
 import { LazyRevenueTrendChart, ChartWrapper } from '@/components/charts';
 import { generateReportPDF } from './utils/generateReportPDF';
+import { formatCurrencyCompact } from '@/lib/utils/formatCurrency';;
 import { useBoards } from '@/lib/query/hooks';
 import { useAuth } from '@/context/AuthContext';
 
@@ -93,9 +94,7 @@ const ReportsPage: React.FC = () => {
   const formatGoalValue = useCallback((value: number) => {
     switch (goalType) {
       case 'currency':
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-        return `$${value.toLocaleString()}`;
+        return formatCurrencyCompact(value);
       case 'number':
         return value.toFixed(0);
       case 'percentage':
@@ -131,12 +130,7 @@ const ReportsPage: React.FC = () => {
       .slice(0, 5);
   }, [wonDeals]);
 
-  // Formatador de moeda
-  const formatCurrency = useCallback((value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-    return `$${value.toLocaleString()}`;
-  }, []);
+  const formatCurrency = formatCurrencyCompact;
 
   const generatedBy = useMemo(() => {
     if (profile?.first_name && profile?.last_name) return `${profile.first_name} ${profile.last_name}`;

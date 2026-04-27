@@ -1,5 +1,6 @@
 import { PeriodFilter, PERIOD_LABELS } from '@/features/dashboard/hooks/useDashboardMetrics';
 import { Deal } from '@/types';
+import { formatCurrencyCompact } from '@/lib/utils/formatCurrency';
 
 interface ReportData {
     pipelineValue: number;
@@ -58,11 +59,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     const contentWidth = pageWidth - margin * 2;
 
     // Helpers
-    const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-        return `$${value.toLocaleString('en-US')}`;
-    };
+    const formatCurrency = formatCurrencyCompact;
 
     // Current date/time
     const now = new Date();
