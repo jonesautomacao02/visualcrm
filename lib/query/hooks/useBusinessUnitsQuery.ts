@@ -71,24 +71,18 @@ export function useBusinessUnitsWithCounts() {
 
       const { data: units, error: unitsError } = await supabase
         .from('business_units')
-        .select(`
-          *,
-          member_count:business_unit_members(count)
-        `)
+        .select('*')
         .is('deleted_at', null)
         .order('name');
 
       if (unitsError) throw unitsError;
 
-      return (units || []).map((unit) => {
-        const base = transform(unit);
-        return {
-          ...base,
-          memberCount: unit.member_count?.[0]?.count ?? 0,
-          channelCount: 0,
-          openConversationCount: 0,
-        };
-      });
+      return (units || []).map((unit) => ({
+        ...transform(unit),
+        memberCount: 0,
+        channelCount: 0,
+        openConversationCount: 0,
+      }));
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     enabled: !authLoading && !!user,
