@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Send, Loader2, Bot, User, Sparkles, Wrench, X, MessageCircle, Minimize2, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAI } from '@/context/AIContext';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import dynamic from 'next/dynamic';
 import remarkGfm from 'remark-gfm';
 
@@ -507,7 +508,7 @@ export function UIChat({
             case 'markDealAsWon': {
                 const title = input?.dealTitle || dealTitleFromId(input?.dealId);
                 if (title) lines.push(`Deal: ${title}`);
-                if (input?.wonValue !== undefined) lines.push(`Valor final: R$ ${Number(input.wonValue).toLocaleString('pt-BR')}`);
+                if (input?.wonValue !== undefined) lines.push(`Valor final: ${formatCurrency(Number(input.wonValue))}`);
                 break;
             }
             case 'moveDeal': {
