@@ -69,28 +69,24 @@ export function useBusinessUnitsWithCounts() {
     queryFn: async (): Promise<BusinessUnitView[]> => {
       const supabase = getClient();
 
-      // Fetch units with member count
       const { data: units, error: unitsError } = await supabase
         .from('business_units')
         .select(`
           *,
-          member_count:business_unit_members(count),
-          channel_count:messaging_channels(count),
-          conversation_count:messaging_conversations(count)
+          member_count:business_unit_members(count)
         `)
         .is('deleted_at', null)
         .order('name');
 
       if (unitsError) throw unitsError;
 
-      // Transform and add counts
       return (units || []).map((unit) => {
         const base = transform(unit);
         return {
           ...base,
           memberCount: unit.member_count?.[0]?.count ?? 0,
-          channelCount: unit.channel_count?.[0]?.count ?? 0,
-          openConversationCount: unit.conversation_count?.[0]?.count ?? 0,
+          channelCount: 0,
+          openConversationCount: 0,
         };
       });
     },
