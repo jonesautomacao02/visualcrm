@@ -400,7 +400,12 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
   const saveValue = () => {
     if (editValue) {
-      updateDeal(deal.id, { value: Number(editValue) });
+      // Aceita vírgula ou ponto como separador decimal (ex: 2850,30 ou 2850.30)
+      const normalized = editValue.replace(',', '.');
+      const parsed = parseFloat(normalized);
+      if (!isNaN(parsed)) {
+        updateDeal(deal.id, { value: parsed });
+      }
       setIsEditingValue(false);
     }
   };
@@ -464,11 +469,13 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
                 {isEditingValue ? (
                   <div className="flex gap-2 items-center">
-                    <span className="text-lg font-mono font-bold text-slate-500">$</span>
+                    <span className="text-lg font-mono font-bold text-slate-500">R$</span>
                     <input
                       autoFocus
-                      type="number"
-                      className="text-lg font-mono font-bold text-primary-600 dark:text-primary-400 bg-white dark:bg-black/20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-32 outline-none focus:ring-2 focus:ring-primary-500"
+                      type="text"
+                      inputMode="decimal"
+                      className="text-lg font-mono font-bold text-primary-600 dark:text-primary-400 bg-white dark:bg-black/20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-36 outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="0,00"
                       value={editValue}
                       onChange={e => setEditValue(e.target.value)}
                       onBlur={saveValue}

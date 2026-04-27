@@ -141,7 +141,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                 contactId: selectedContact?.id || '',
                 boardId: activeBoardId || activeBoard.id,
                 ownerId: user?.id || '',
-                value: Number(dealData.value) || 0,
+                value: parseFloat(dealData.value.replace(',', '.')) || 0,
                 items: [],
                 status: firstStage.id,
                 createdAt: new Date().toISOString(),
@@ -382,9 +382,10 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                             <div>
                                 <label className="block text-xs font-medium text-slate-500 mb-1">Valor Estimado (R$)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="decimal"
                                     className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
-                                    placeholder="0.00"
+                                    placeholder="0,00"
                                     value={dealData.value}
                                     onChange={e => setDealData(prev => ({ ...prev, value: e.target.value }))}
                                 />
