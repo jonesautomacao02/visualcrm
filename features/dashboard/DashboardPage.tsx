@@ -8,7 +8,7 @@ import { useContacts } from '@/lib/query/hooks/useContactsQuery';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
 import { useToast } from '@/context/ToastContext';
 import { TrendingUp, TrendingDown, Users, DollarSign, Target, Clock, MoreVertical, AlertTriangle } from 'lucide-react';
-import { formatCurrency, formatCurrencyCompact } from '@/lib/utils/formatCurrency';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { StatCard } from './components/StatCard';
 import { ActivityFeedItem } from './components/ActivityFeedItem';
 import { PipelineAlertsModal } from './components/PipelineAlertsModal';
@@ -280,7 +280,7 @@ const DashboardPage: React.FC = () => {
             </h3>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                {formatCurrencyCompact(avgLTV)}
+                {formatCurrency(avgLTV)}
               </span>
               <span className="text-xs text-green-500 font-bold mb-1">Médio</span>
             </div>

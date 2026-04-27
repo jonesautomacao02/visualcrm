@@ -8,7 +8,7 @@ import { useDashboardMetrics, PeriodFilter, COMPARISON_LABELS } from '../dashboa
 import { PeriodFilterSelect } from '@/components/filters/PeriodFilterSelect';
 import { LazyRevenueTrendChart, ChartWrapper } from '@/components/charts';
 import { generateReportPDF } from './utils/generateReportPDF';
-import { formatCurrencyCompact } from '@/lib/utils/formatCurrency';;
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { useBoards } from '@/lib/query/hooks';
 import { useAuth } from '@/context/AuthContext';
 
@@ -94,7 +94,7 @@ const ReportsPage: React.FC = () => {
   const formatGoalValue = useCallback((value: number) => {
     switch (goalType) {
       case 'currency':
-        return formatCurrencyCompact(value);
+        return formatCurrency(value);
       case 'number':
         return value.toFixed(0);
       case 'percentage':
@@ -130,7 +130,6 @@ const ReportsPage: React.FC = () => {
       .slice(0, 5);
   }, [wonDeals]);
 
-  const formatCurrency = formatCurrencyCompact;
 
   const generatedBy = useMemo(() => {
     if (profile?.first_name && profile?.last_name) return `${profile.first_name} ${profile.last_name}`;
