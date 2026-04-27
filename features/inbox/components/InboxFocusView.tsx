@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import {
   ChevronLeft,
   ChevronRight,
@@ -431,7 +432,7 @@ export const InboxFocusView: React.FC<InboxFocusViewProps> = ({
       {/* Valor (se houver) */}
       {value && (
         <div className="text-lg font-bold text-green-600 dark:text-green-400 mb-6">
-          R$ {value.toLocaleString('pt-BR')}
+          {formatCurrency(value)}
         </div>
       )}
 

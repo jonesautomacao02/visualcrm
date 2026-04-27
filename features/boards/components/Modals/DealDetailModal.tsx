@@ -57,6 +57,7 @@ import { useRouter } from 'next/navigation';
 import { StageProgressBar } from '../StageProgressBar';
 import { ActivityRow } from '@/features/activities/components/ActivityRow';
 import { formatPriorityPtBr } from '@/lib/utils/priority';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { BriefingDrawer } from '@/features/deals/components/BriefingDrawer';
 import { AIExtractedFields } from '@/features/deals/components/AIExtractedFields';
 
@@ -486,7 +487,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     className="text-lg text-primary-600 dark:text-primary-400 font-mono font-bold cursor-pointer hover:underline decoration-dashed underline-offset-4"
                     title="Clique para editar valor"
                   >
-                    ${deal.value.toLocaleString()}
+                    {formatCurrency(deal.value)}
                   </p>
                 )}
               </div>
@@ -1047,10 +1048,10 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                                   {item.quantity}
                                 </td>
                                 <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
-                                  ${item.price.toLocaleString()}
+                                  {formatCurrency(item.price)}
                                 </td>
                                 <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">
-                                  ${(item.price * item.quantity).toLocaleString()}
+                                  {formatCurrency(item.price * item.quantity)}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <button
@@ -1073,7 +1074,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                               Total do Pedido
                             </td>
                             <td className="px-4 py-3 text-right font-bold text-primary-600 dark:text-primary-400 text-lg">
-                              ${deal.value.toLocaleString()}
+                              {formatCurrency(deal.value)}
                             </td>
                             <td></td>
                           </tr>

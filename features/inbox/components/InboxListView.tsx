@@ -4,6 +4,7 @@ import { Activity } from '@/types';
 import { AISuggestion } from '../hooks/useInboxController';
 import { InboxSection } from './InboxSection';
 import { InboxZeroState } from './InboxZeroState';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import {
   ChevronDown,
   ChevronRight,
@@ -95,7 +96,7 @@ const SuggestionRow: React.FC<{
 
       {value && (
         <span className="shrink-0 text-sm font-medium text-green-600 dark:text-green-400">
-          R$ {(value / 1000).toFixed(0)}k
+          {formatCurrency(value)}
         </span>
       )}
 

@@ -2,14 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Package, Pencil, Plus, Save, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
-
-function formatBRL(v: number) {
-  try {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-  } catch {
-    return `R$ ${v.toFixed(2)}`;
-  }
-}
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 
 /**
  * Componente React `ProductsCatalogManager`.
@@ -300,7 +293,7 @@ export const ProductsCatalogManager: React.FC = () => {
                             )}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                            {formatBRL(p.price)}{p.sku ? ` • SKU: ${p.sku}` : ''}{p.description ? ` • ${p.description}` : ''}
+                            {formatCurrency(p.price)}{p.sku ? ` • SKU: ${p.sku}` : ''}{p.description ? ` • ${p.description}` : ''}
                           </div>
                         </>
                       )}

@@ -268,10 +268,11 @@ function UnitFormModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="bu-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Nome <span className="text-red-500">*</span>
           </label>
           <input
+            id="bu-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -284,10 +285,11 @@ function UnitFormModal({
 
         {/* Key */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="bu-key" className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Identificador (slug) <span className="text-red-500">*</span>
           </label>
           <input
+            id="bu-key"
             type="text"
             value={key}
             onChange={(e) => handleKeyChange(e.target.value)}
@@ -303,10 +305,11 @@ function UnitFormModal({
 
         {/* Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="bu-description" className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Descrição
           </label>
           <textarea
+            id="bu-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Descrição opcional da unidade"
@@ -610,6 +613,7 @@ export function BusinessUnitsSection() {
       setIsFormOpen(false);
       setEditingUnit(null);
     } catch (error) {
+      console.error('[BusinessUnit] Erro ao salvar:', error);
       addToast(
         (error as any)?.message ?? 'Erro ao salvar unidade',
         'error'

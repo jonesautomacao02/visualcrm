@@ -62,6 +62,7 @@ const MessageComposerModal = dynamic(
 );
 import { callAIProxy } from '@/lib/supabase/ai-proxy';
 import type { ScriptCategory } from '@/lib/supabase/quickScripts';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 
 // Performance: reuse Intl formatter instances.
 const PT_BR_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
@@ -768,7 +769,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                         </div>
                         <div className="text-right">
                             <p className="text-lg font-bold text-emerald-400 font-mono tracking-tight">
-                                R$ {deal.value?.toLocaleString('pt-BR') || '0'}
+                                {formatCurrency(deal.value ?? 0)}
                             </p>
                         </div>
                     </div>
@@ -1076,7 +1077,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             )}
                                             {contact.totalValue && contact.totalValue > 0 && (
                                                 <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">
-                                                    LTV: R$ {contact.totalValue.toLocaleString('pt-BR')}
+                                                    LTV: {formatCurrency(contact.totalValue)}
                                                 </span>
                                             )}
                                         </div>
@@ -1110,7 +1111,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 <div>
                                     <span className="text-slate-600">Valor</span>
                                     <p className="text-emerald-400 font-semibold">
-                                        R$ {deal.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {formatCurrency(deal.value)}
                                     </p>
                                 </div>
                                 <div>

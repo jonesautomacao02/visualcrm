@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useId } from 'react';
 import { Plus, GripVertical, Trash2, ChevronDown, Settings, Copy, Bot } from 'lucide-react';
 import { Board, BoardStage, ContactStage } from '@/types';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import { BOARD_TEMPLATES, BoardTemplateType } from '@/lib/templates/board-templates';
 import { LifecycleSettingsModal } from '@/features/settings/components/LifecycleSettingsModal';
 import { BoardAIConfigModal } from './BoardAIConfigModal';
@@ -523,7 +524,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                     .filter(p => p.active !== false)
                     .map(p => (
                       <option key={p.id} value={p.id}>
-                        {p.name} — R$ {Number(p.price ?? 0).toLocaleString('pt-BR')}
+                        {p.name} — {formatCurrency(Number(p.price ?? 0))}
                       </option>
                     ))}
                 </select>
