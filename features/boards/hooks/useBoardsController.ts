@@ -126,7 +126,7 @@ export const useBoardsController = () => {
   // Filter State (declared before AI context useEffect that uses them)
   const [searchTerm, setSearchTerm] = useState('');
   const [ownerFilter, setOwnerFilter] = useState<'all' | 'mine'>('all');
-  const [statusFilter, setStatusFilter] = useState<'open' | 'won' | 'lost' | 'all'>('open');
+  const [statusFilter, setStatusFilter] = useState<'open' | 'won' | 'lost' | 'all'>('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
   // Track last context signature to avoid unnecessary setContext calls
