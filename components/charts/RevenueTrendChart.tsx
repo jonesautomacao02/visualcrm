@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCurrency } from '@/lib/utils/formatCurrency';
 import {
   AreaChart,
   Area,
@@ -40,7 +41,7 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ data }) =>
         axisLine={false}
         tickLine={false}
         tick={{ fill: 'var(--chart-text)', fontSize: 12 }}
-        tickFormatter={value => `$${value / 1000}k`}
+        tickFormatter={value => formatCurrency(value)}
       />
       <Tooltip
         contentStyle={{
