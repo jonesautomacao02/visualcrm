@@ -8,6 +8,7 @@ import { useContacts } from '@/lib/query/hooks/useContactsQuery';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
 import { useToast } from '@/context/ToastContext';
 import { TrendingUp, TrendingDown, Users, DollarSign, Target, Clock, MoreVertical, AlertTriangle } from 'lucide-react';
+import { formatCurrency, formatCurrencyCompact } from '@/lib/utils/formatCurrency';
 import { StatCard } from './components/StatCard';
 import { ActivityFeedItem } from './components/ActivityFeedItem';
 import { PipelineAlertsModal } from './components/PipelineAlertsModal';
@@ -156,7 +157,7 @@ const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
           <StatCard
             title="Pipeline Total"
-            value={`$${pipelineValue.toLocaleString()}`}
+            value={formatCurrency(pipelineValue)}
             subtext={pipelineChangeInfo.text}
             subtextPositive={pipelineChangeInfo.isPositive}
             icon={DollarSign}
@@ -186,7 +187,7 @@ const DashboardPage: React.FC = () => {
           />
           <StatCard
             title="Receita (Ganha)"
-            value={`$${wonRevenue.toLocaleString()}`}
+            value={formatCurrency(wonRevenue)}
             subtext={revenueChangeInfo.text}
             subtextPositive={revenueChangeInfo.isPositive}
             icon={TrendingUp}
@@ -269,7 +270,7 @@ const DashboardPage: React.FC = () => {
               Sem mudança de estágio há +10 dias.
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              ${stagnantDealsValue.toLocaleString()} em risco
+              {formatCurrency(stagnantDealsValue)} em risco
             </p>
           </div>
 
@@ -279,7 +280,7 @@ const DashboardPage: React.FC = () => {
             </h3>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                ${(avgLTV / 1000).toFixed(1)}k
+                {formatCurrencyCompact(avgLTV)}
               </span>
               <span className="text-xs text-green-500 font-bold mb-1">Médio</span>
             </div>
