@@ -142,8 +142,12 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingValue, setIsEditingValue] = useState(false);
+  const [isEditingClosedAt, setIsEditingClosedAt] = useState(false);
+  const [isEditingExpectedCloseDate, setIsEditingExpectedCloseDate] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editValue, setEditValue] = useState('');
+  const [editClosedAt, setEditClosedAt] = useState('');
+  const [editExpectedCloseDate, setEditExpectedCloseDate] = useState('');
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isDrafting, setIsDrafting] = useState(false);
@@ -192,6 +196,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
       setActiveTab('timeline');
       setIsEditingTitle(false);
       setIsEditingValue(false);
+      setIsEditingClosedAt(false);
       setShowLossReasonModal(false);
       setPendingLostStageId(null);
       setLossReasonOrigin('button');
@@ -408,6 +413,17 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
       }
       setIsEditingValue(false);
     }
+  };
+
+  const saveClosedAt = () => {
+    // '' maps to closed_at = null in the service (deal.closedAt || null)
+    updateDeal(deal.id, { closedAt: editClosedAt ? new Date(editClosedAt).toISOString() : '' });
+    setIsEditingClosedAt(false);
+  };
+
+  const saveExpectedCloseDate = () => {
+    updateDeal(deal.id, { expectedCloseDate: editExpectedCloseDate || undefined });
+    setIsEditingExpectedCloseDate(false);
   };
 
   const updateCustomField = (key: string, value: string | number | boolean) => {
@@ -727,6 +743,72 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <span className="text-slate-900 dark:text-white">
                         {PT_BR_DATE_FORMATTER.format(new Date(deal.createdAt))}
                       </span>
+                    </div>
+                    <div className="flex justify-between text-sm items-center">
+                      <span className="text-slate-500">Prev. Fechamento</span>
+                      {isEditingExpectedCloseDate ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            autoFocus
+                            type="date"
+                            className="bg-white dark:bg-black/20 border border-slate-300 dark:border-slate-600 rounded px-2 py-0.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 [color-scheme:light] dark:[color-scheme:dark]"
+                            value={editExpectedCloseDate}
+                            onChange={e => setEditExpectedCloseDate(e.target.value)}
+                            onBlur={saveExpectedCloseDate}
+                            onKeyDown={e => { if (e.key === 'Enter') saveExpectedCloseDate(); if (e.key === 'Escape') setIsEditingExpectedCloseDate(false); }}
+                          />
+                          <button onClick={saveExpectedCloseDate} className="text-green-500 hover:text-green-400">
+                            <Check size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditExpectedCloseDate(deal.expectedCloseDate ? deal.expectedCloseDate.split('T')[0] : '');
+                            setIsEditingExpectedCloseDate(true);
+                          }}
+                          className="text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 text-xs underline decoration-dashed underline-offset-2 cursor-pointer"
+                          title="Clique para editar a data prevista de fechamento"
+                        >
+                          {deal.expectedCloseDate
+                            ? PT_BR_DATE_FORMATTER.format(new Date(deal.expectedCloseDate))
+                            : <span className="text-slate-400 italic">Definir data</span>
+                          }
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex justify-between text-sm items-center">
+                      <span className="text-slate-500">Fechamento</span>
+                      {isEditingClosedAt ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            autoFocus
+                            type="date"
+                            className="bg-white dark:bg-black/20 border border-slate-300 dark:border-slate-600 rounded px-2 py-0.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 [color-scheme:light] dark:[color-scheme:dark]"
+                            value={editClosedAt}
+                            onChange={e => setEditClosedAt(e.target.value)}
+                            onBlur={saveClosedAt}
+                            onKeyDown={e => { if (e.key === 'Enter') saveClosedAt(); if (e.key === 'Escape') setIsEditingClosedAt(false); }}
+                          />
+                          <button onClick={saveClosedAt} className="text-green-500 hover:text-green-400">
+                            <Check size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditClosedAt(deal.closedAt ? deal.closedAt.split('T')[0] : '');
+                            setIsEditingClosedAt(true);
+                          }}
+                          className="text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 text-xs underline decoration-dashed underline-offset-2 cursor-pointer"
+                          title="Clique para editar a data de fechamento"
+                        >
+                          {deal.closedAt
+                            ? PT_BR_DATE_FORMATTER.format(new Date(deal.closedAt))
+                            : <span className="text-slate-400 italic">Definir data</span>
+                          }
+                        </button>
+                      )}
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">Probabilidade</span>

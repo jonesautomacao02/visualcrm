@@ -159,12 +159,7 @@ export function useAIMetricsQuery() {
           .eq('organization_id', orgId),
       ]);
 
-      if (logsResult.error) {
-        console.error('[useAIMetricsQuery] Logs error:', logsResult.error);
-      }
-      if (hitlResult.error) {
-        console.error('[useAIMetricsQuery] HITL error:', hitlResult.error);
-      }
+      // Errors are handled gracefully — missing tables fall back to empty arrays
 
       const logs = (logsResult.data || []) as AILogRow[];
       const hitlData = hitlResult.data || [];

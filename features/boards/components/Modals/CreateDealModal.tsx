@@ -3,7 +3,7 @@ import { useCreateDealWithContact } from '@/lib/query/hooks/useDealsQuery';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
 import { useAuth } from '@/context/AuthContext';
 import { Deal, Board, Contact, Company } from '@/types';
-import { X, Building2, User, Mail, Phone, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Building2, User, Mail, Phone, AlertCircle, Loader2, Calendar } from 'lucide-react';
 import { DebugFillButton } from '@/components/debug/DebugFillButton';
 import { fakeDeal, fakeContact, fakeCompany } from '@/lib/debug';
 import { ContactSearchCombobox } from '@/components/ui/ContactSearchCombobox';
@@ -51,8 +51,14 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
     // Estado do deal
     const [dealData, setDealData] = useState({
         title: '',
-        value: ''
+        value: '',
+        expectedCloseDate: ''
     });
+
+    // Estado para venda histórica
+    const [isHistorical, setIsHistorical] = useState(false);
+    const [historicalClosedAt, setHistoricalClosedAt] = useState('');
+    const [historicalStatus, setHistoricalStatus] = useState<'won' | 'lost'>('won');
 
     // Estado de UI
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +69,10 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
         setSelectedCompany(null);
         setIsCreatingNew(false);
         setNewContactData({ name: '', email: '', phone: '', companyName: '' });
-        setDealData({ title: '', value: '' });
+        setDealData({ title: '', value: '', expectedCloseDate: '' });
+        setIsHistorical(false);
+        setHistoricalClosedAt('');
+        setHistoricalStatus('won');
         setError(null);
         setIsSubmitting(false);
     };
@@ -75,7 +84,8 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
         
         setDealData({
             title: deal.title,
-            value: String(deal.value)
+            value: String(deal.value),
+            expectedCloseDate: ''
         });
         
         setIsCreatingNew(true);
@@ -134,6 +144,10 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                 (profile?.email || user?.email || '').split('@')[0] ||
                 'Eu';
 
+            const closedAtISO = isHistorical && historicalClosedAt
+                ? new Date(historicalClosedAt).toISOString()
+                : undefined;
+
             const deal: Deal = {
                 id: crypto.randomUUID(),
                 title: dealData.title,
@@ -144,18 +158,20 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                 value: parseFloat(dealData.value.replace(',', '.')) || 0,
                 items: [],
                 status: firstStage.id,
-                createdAt: new Date().toISOString(),
+                createdAt: closedAtISO || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                probability: 10,
+                probability: isHistorical ? (historicalStatus === 'won' ? 100 : 0) : 10,
                 priority: 'medium',
-                tags: ['Novo'],
+                tags: isHistorical ? ['Histórico'] : ['Novo'],
                 owner: {
                     name: ownerName,
                     avatar: profile?.avatar_url || ''
                 },
                 customFields: {},
-                isWon: false,
-                isLost: false,
+                isWon: isHistorical && historicalStatus === 'won',
+                isLost: isHistorical && historicalStatus === 'lost',
+                ...(closedAtISO ? { closedAt: closedAtISO } : {}),
+                ...(dealData.expectedCloseDate ? { expectedCloseDate: dealData.expectedCloseDate } : {}),
             };
 
             const { id: _id, createdAt: _createdAt, ...dealWithoutId } = deal;
@@ -390,7 +406,71 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                                     onChange={e => setDealData(prev => ({ ...prev, value: e.target.value }))}
                                 />
                             </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Data Prevista de Fechamento</label>
+                                <div className="relative">
+                                    <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                                    <input
+                                        type="date"
+                                        style={{ colorScheme: 'light' }}
+                                        className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                                        value={dealData.expectedCloseDate}
+                                        onChange={e => setDealData(prev => ({ ...prev, expectedCloseDate: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    {/* Venda Histórica */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-white/5">
+                        <button
+                            type="button"
+                            onClick={() => setIsHistorical(v => !v)}
+                            className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        >
+                            <div className={`w-8 h-4 rounded-full transition-colors ${isHistorical ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${isHistorical ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </div>
+                            Registrar venda histórica (já fechada)
+                        </button>
+
+                        {isHistorical && (
+                            <div className="mt-3 space-y-3 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">Data do Fechamento *</label>
+                                    <input
+                                        required={isHistorical}
+                                        type="date"
+                                        style={{ colorScheme: 'light' }}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                                        value={historicalClosedAt}
+                                        max={new Date().toISOString().split('T')[0]}
+                                        onChange={e => setHistoricalClosedAt(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">Resultado</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setHistoricalStatus('won')}
+                                            className={`py-2 rounded-lg text-sm font-bold border transition-all ${historicalStatus === 'won' ? 'bg-green-600 text-white border-green-600' : 'bg-white dark:bg-black/20 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-green-400'}`}
+                                        >
+                                            ✓ Ganho
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setHistoricalStatus('lost')}
+                                            className={`py-2 rounded-lg text-sm font-bold border transition-all ${historicalStatus === 'lost' ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-black/20 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-red-400'}`}
+                                        >
+                                            ✗ Perdido
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Mensagem de erro */}
