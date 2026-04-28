@@ -100,6 +100,8 @@ export interface DbDeal {
   is_lost: boolean;
   /** Data de fechamento. */
   closed_at: string | null;
+  /** Data prevista de fechamento. */
+  expected_close_date: string | null;
   /** AI-extracted BANT fields (zero config). */
   ai_extracted: Record<string, any> | null;
 }
@@ -164,6 +166,7 @@ const transformDeal = (db: DbDeal | DbDealWithItems, items?: DbDealItem[]): Deal
     isWon: db.is_won ?? false,
     isLost: db.is_lost ?? false,
     closedAt: db.closed_at || undefined,
+    expectedCloseDate: db.expected_close_date || undefined,
     priority: (db.priority as Deal['priority']) || 'medium',
     boardId: db.board_id || '',
     contactId: db.contact_id || '',
@@ -212,6 +215,7 @@ const transformDealToDb = (deal: Partial<Deal>): Partial<DbDeal> => {
   if (deal.isWon !== undefined) db.is_won = deal.isWon;
   if (deal.isLost !== undefined) db.is_lost = deal.isLost;
   if (deal.closedAt !== undefined) db.closed_at = deal.closedAt || null;
+  if (deal.expectedCloseDate !== undefined) db.expected_close_date = deal.expectedCloseDate || null;
 
   if (deal.priority !== undefined) db.priority = deal.priority;
   if (deal.boardId !== undefined) db.board_id = sanitizeUUID(deal.boardId);
@@ -399,6 +403,7 @@ export const dealsService = {
         is_won: deal.isWon ?? false,
         is_lost: deal.isLost ?? false,
         closed_at: deal.closedAt ?? null,
+        expected_close_date: deal.expectedCloseDate ?? null,
       };
 
       const { data, error } = await supabase

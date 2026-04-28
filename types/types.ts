@@ -222,6 +222,7 @@ export interface Deal {
   isWon: boolean; // Deal foi ganho?
   isLost: boolean; // Deal foi perdido?
   closedAt?: string; // Quando foi fechado
+  expectedCloseDate?: string; // Data prevista de fechamento (YYYY-MM-DD)
   createdAt: string;
   updatedAt: string;
   probability: number;
