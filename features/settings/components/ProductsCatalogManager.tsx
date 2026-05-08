@@ -4,12 +4,21 @@ import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
+// Aceita vírgula ou ponto como separador decimal (padrão BR: "59,90" ou "59.90")
+// String vazia ou inválida retorna 0
+function parseDecimal(val: string): number {
+  const n = parseFloat(val.replace(',', '.'));
+  return Number.isNaN(n) ? 0 : n;
+}
+
 /**
  * Componente React `ProductsCatalogManager`.
  * @returns {Element} Retorna um valor do tipo `Element`.
  */
 export const ProductsCatalogManager: React.FC = () => {
-  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false); // carregamento da lista
+  const [saving, setSaving] = useState(false);     // operações de salvar/excluir
+
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +27,9 @@ export const ProductsCatalogManager: React.FC = () => {
   const [sku, setSku] = useState('');
   const [description, setDescription] = useState('');
 
-  const canCreate = name.trim().length > 1 && Number.isFinite(Number(price));
+  // Validação visual (não bloqueia o botão — erros aparecem ao tentar criar)
+  const nameError = name.trim().length === 0 ? '' : name.trim().length < 2 ? 'Nome muito curto' : '';
+  const priceError = price !== '' && parseDecimal(price) < 0 ? 'Preço inválido' : '';
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -27,16 +38,19 @@ export const ProductsCatalogManager: React.FC = () => {
   const [editDescription, setEditDescription] = useState('');
 
   const load = async () => {
-    setLoading(true);
+    setFetching(true);
     setError(null);
-    const res = await productsService.getAll();
-    if (res.error) {
-      setError(res.error.message);
-      setProducts([]);
-    } else {
-      setProducts(res.data);
+    try {
+      const res = await productsService.getAll();
+      if (res.error) {
+        setError(res.error.message);
+        setProducts([]);
+      } else {
+        setProducts(res.data);
+      }
+    } finally {
+      setFetching(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -58,40 +72,54 @@ export const ProductsCatalogManager: React.FC = () => {
   }, [products]);
 
   const create = async () => {
-    if (!canCreate) return;
-    setLoading(true);
-    setError(null);
-    const res = await productsService.create({
-      name: name.trim(),
-      price: Number(price),
-      sku: sku.trim() || undefined,
-      description: description.trim() || undefined,
-    });
-    if (res.error) {
-      setError(res.error.message);
-      setLoading(false);
+    if (saving) return;
+    // Validação com feedback explícito
+    if (name.trim().length < 2) {
+      setError('Nome deve ter pelo menos 2 caracteres.');
       return;
     }
-    setName('');
-    setPrice('0');
-    setSku('');
-    setDescription('');
-    await load();
-    // Notify app to refresh dropdowns that read from SettingsContext
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    if (parseDecimal(price) < 0) {
+      setError('Preço não pode ser negativo.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await productsService.create({
+        name: name.trim(),
+        price: parseDecimal(price),
+        sku: sku.trim() || undefined,
+        description: description.trim() || undefined,
+      });
+      if (res.error) {
+        setError(res.error.message);
+        return;
+      }
+      setName('');
+      setPrice('0');
+      setSku('');
+      setDescription('');
+      await load();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleActive = async (p: Product, next: boolean) => {
-    setLoading(true);
+    setSaving(true);
     setError(null);
-    const res = await productsService.update(p.id, { active: next });
-    if (res.error) {
-      setError(res.error.message);
-      setLoading(false);
-      return;
+    try {
+      const res = await productsService.update(p.id, { active: next });
+      if (res.error) {
+        setError(res.error.message);
+        return;
+      }
+      await load();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    } finally {
+      setSaving(false);
     }
-    await load();
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
   };
 
   const startEdit = (p: Product) => {
@@ -112,49 +140,55 @@ export const ProductsCatalogManager: React.FC = () => {
 
   const saveEdit = async () => {
     if (!editingId) return;
-    const name = editName.trim();
-    const price = Number(editPrice);
+    const editedName = editName.trim();
+    const editedPrice = parseDecimal(editPrice);
 
-    if (name.length < 2) {
+    if (editedName.length < 2) {
       setError('Nome inválido.');
       return;
     }
-    if (!Number.isFinite(price) || price < 0) {
-      setError('Preço inválido.');
+    if (editedPrice < 0) {
+      setError('Preço inválido. Use ponto ou vírgula como separador decimal (ex: 59,90).');
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     setError(null);
-    const res = await productsService.update(editingId, {
-      name,
-      price,
-      sku: editSku.trim() || undefined,
-      description: editDescription.trim() || undefined,
-    });
-    if (res.error) {
-      setError(res.error.message);
-      setLoading(false);
-      return;
+    try {
+      const res = await productsService.update(editingId, {
+        name: editedName,
+        price: editedPrice,
+        sku: editSku.trim() || undefined,
+        description: editDescription.trim() || undefined,
+      });
+      if (res.error) {
+        setError(res.error.message);
+        return;
+      }
+      await load();
+      cancelEdit();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    } finally {
+      setSaving(false);
     }
-    await load();
-    cancelEdit();
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
   };
 
   const remove = async (p: Product) => {
     const ok = window.confirm(`Excluir "${p.name}"? Isso não remove itens já usados em deals históricos.`);
     if (!ok) return;
-    setLoading(true);
+    setSaving(true);
     setError(null);
-    const res = await productsService.delete(p.id);
-    if (res.error) {
-      setError(res.error.message);
-      setLoading(false);
-      return;
+    try {
+      const res = await productsService.delete(p.id);
+      if (res.error) {
+        setError(res.error.message);
+        return;
+      }
+      await load();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    } finally {
+      setSaving(false);
     }
-    await load();
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
   };
 
   return (
@@ -194,6 +228,7 @@ export const ProductsCatalogManager: React.FC = () => {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               inputMode="decimal"
+              placeholder="Ex: 59,90"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
           </div>
@@ -219,19 +254,23 @@ export const ProductsCatalogManager: React.FC = () => {
             <button
               type="button"
               onClick={create}
-              disabled={loading || !canCreate}
+              disabled={saving}
               className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Criar produto"
             >
               <Plus className="h-4 w-4" />
-              Criar
+              {saving ? 'Criando…' : 'Criar'}
             </button>
           </div>
         </div>
 
         {/* List */}
         <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4">
-          {sorted.length === 0 ? (
+          {fetching && products.length === 0 ? (
+            <div className="text-sm text-slate-500 dark:text-slate-400 py-6">
+              Carregando…
+            </div>
+          ) : sorted.length === 0 ? (
             <div className="text-sm text-slate-500 dark:text-slate-400 py-6">
               Nenhum produto cadastrado ainda.
             </div>
@@ -262,6 +301,7 @@ export const ProductsCatalogManager: React.FC = () => {
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value)}
                               inputMode="decimal"
+                              placeholder="Ex: 59,90"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
                           </div>
@@ -289,7 +329,7 @@ export const ProductsCatalogManager: React.FC = () => {
                             {!isActive && (
                               <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300">
                                 Inativo
-                              </span>
+              </span>
                             )}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -307,7 +347,7 @@ export const ProductsCatalogManager: React.FC = () => {
                             className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
                             title="Salvar"
                             aria-label="Salvar alterações"
-                            disabled={loading}
+                            disabled={saving}
                           >
                             <Save className="h-4 w-4 text-primary-600" />
                           </button>
@@ -317,7 +357,7 @@ export const ProductsCatalogManager: React.FC = () => {
                             className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
                             title="Cancelar"
                             aria-label="Cancelar edição"
-                            disabled={loading}
+                            disabled={saving}
                           >
                             <X className="h-4 w-4 text-slate-500" />
                           </button>
@@ -329,7 +369,7 @@ export const ProductsCatalogManager: React.FC = () => {
                           className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
                           title="Editar"
                           aria-label="Editar produto"
-                          disabled={loading}
+                          disabled={saving}
                         >
                           <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                         </button>
@@ -340,7 +380,7 @@ export const ProductsCatalogManager: React.FC = () => {
                         className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
                         title={isActive ? 'Desativar' : 'Ativar'}
                         aria-label={isActive ? 'Desativar produto' : 'Ativar produto'}
-                        disabled={loading}
+                        disabled={saving}
                       >
                         {isActive ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4 text-red-500" />}
                       </button>
@@ -350,7 +390,7 @@ export const ProductsCatalogManager: React.FC = () => {
                         className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-900/20"
                         title="Excluir"
                         aria-label="Excluir produto"
-                        disabled={loading}
+                        disabled={saving}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </button>
@@ -365,4 +405,3 @@ export const ProductsCatalogManager: React.FC = () => {
     </div>
   );
 };
-

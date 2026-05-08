@@ -412,9 +412,11 @@ export const contactsService = {
 
   /**
    * Cria um novo contato.
-   * 
+   * Antes de inserir, verifica se já existe um contato com o mesmo email ou telefone
+   * na mesma organização para evitar duplicatas (upsert pattern).
+   *
    * @param contact - Dados do contato (sem id e createdAt).
-   * @returns Promise com contato criado ou erro.
+   * @returns Promise com contato criado (ou existente) ou erro.
    */
   async create(contact: Omit<Contact, 'id' | 'createdAt'>): Promise<{ data: Contact | null; error: Error | null }> {
     try {
@@ -422,6 +424,35 @@ export const contactsService = {
         return { data: null, error: new Error('Supabase não configurado') };
       }
       const phoneE164 = normalizePhoneE164(contact.phone);
+      const emailNormalized = (contact.email || '').trim().toLowerCase();
+
+      // Deduplicação: retorna o contato existente se já houver um com mesmo email ou telefone
+      let existing: DbContact | null = null;
+
+      if (emailNormalized) {
+        const { data } = await supabase
+          .from('contacts')
+          .select('*')
+          .is('deleted_at', null)
+          .ilike('email', emailNormalized)
+          .maybeSingle();
+        existing = data as DbContact | null;
+      }
+
+      if (!existing && phoneE164) {
+        const { data } = await supabase
+          .from('contacts')
+          .select('*')
+          .is('deleted_at', null)
+          .eq('phone', phoneE164)
+          .maybeSingle();
+        existing = data as DbContact | null;
+      }
+
+      if (existing) {
+        return { data: transformContact(existing), error: null };
+      }
+
       const organizationId = await getCurrentOrganizationId();
       const insertData = {
         name: contact.name,
