@@ -4,8 +4,16 @@ import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
-// Aceita vírgula ou ponto como separador decimal (padrão BR: "59,90" ou "59.90")
-// String vazia ou inválida retorna 0
+// Normaliza input de preço: converte ponto em vírgula, remove caracteres inválidos,
+// garante no máximo uma vírgula. Ex: "59.90" → "59,90" | "abc" → ""
+function normalizePriceInput(raw: string): string {
+  let v = raw.replace(/\./g, ',').replace(/[^\d,]/g, '');
+  const first = v.indexOf(',');
+  if (first !== -1) v = v.slice(0, first + 1) + v.slice(first + 1).replace(/,/g, '');
+  return v;
+}
+
+// Converte string normalizada para número. "59,90" → 59.9 | "" → 0
 function parseDecimal(val: string): number {
   const n = parseFloat(val.replace(',', '.'));
   return Number.isNaN(n) ? 0 : n;
@@ -227,7 +235,7 @@ export const ProductsCatalogManager: React.FC = () => {
             <input
               type="text"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => setPrice(normalizePriceInput(e.target.value))}
               placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
@@ -300,7 +308,7 @@ export const ProductsCatalogManager: React.FC = () => {
                             <input
                               type="text"
                               value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value)}
+                              onChange={(e) => setEditPrice(normalizePriceInput(e.target.value))}
                               placeholder="0,00"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
