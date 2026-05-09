@@ -4,13 +4,21 @@ import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
-// Normaliza input de preço: converte ponto em vírgula, remove caracteres inválidos,
-// garante no máximo uma vírgula. Ex: "59.90" → "59,90" | "abc" → ""
+// Normaliza qualquer input de preço para o formato "59,90":
+// - descarta tudo antes do primeiro dígito (ex: "R$ ")
+// - trata o PRIMEIRO caractere não-numérico como separador decimal
+//   (funciona com vírgula, ponto, e qualquer variante Unicode enviada pelo teclado)
+// - descarta separadores de milhar e caracteres extras
 function normalizePriceInput(raw: string): string {
-  let v = raw.replace(/\./g, ',').replace(/[^\d,]/g, '');
-  const first = v.indexOf(',');
-  if (first !== -1) v = v.slice(0, first + 1) + v.slice(first + 1).replace(/,/g, '');
-  return v;
+  const start = raw.search(/\d/);
+  if (start === -1) return '';
+  const s = raw.slice(start);
+  // Divide em: dígitos antes do separador | separador (qualquer char não-dígito) | resto
+  const match = s.match(/^(\d*?)([^\d]?)(\d*)$/);
+  if (!match) return s.replace(/\D/g, '');
+  const [, intPart, sep, decPart] = match;
+  if (!sep) return intPart; // sem separador: só inteiros
+  return intPart + ',' + decPart.slice(0, 2); // limita a 2 casas decimais
 }
 
 // Converte string normalizada para número. "59,90" → 59.9 | "" → 0
