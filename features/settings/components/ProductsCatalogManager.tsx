@@ -228,7 +228,6 @@ export const ProductsCatalogManager: React.FC = () => {
               type="text"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              inputMode="decimal"
               placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
@@ -302,7 +301,6 @@ export const ProductsCatalogManager: React.FC = () => {
                               type="text"
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value)}
-                              inputMode="decimal"
                               placeholder="0,00"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
