@@ -23,7 +23,7 @@ export const ProductsCatalogManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState('');
-  const [price, setPrice] = useState<string>('0');
+  const [price, setPrice] = useState<string>('');
   const [sku, setSku] = useState('');
   const [description, setDescription] = useState('');
 
@@ -96,7 +96,7 @@ export const ProductsCatalogManager: React.FC = () => {
         return;
       }
       setName('');
-      setPrice('0');
+      setPrice('');
       setSku('');
       setDescription('');
       await load();
@@ -133,7 +133,7 @@ export const ProductsCatalogManager: React.FC = () => {
   const cancelEdit = () => {
     setEditingId(null);
     setEditName('');
-    setEditPrice('0');
+    setEditPrice('');
     setEditSku('');
     setEditDescription('');
   };
@@ -225,8 +225,12 @@ export const ProductsCatalogManager: React.FC = () => {
           <div className="lg:col-span-2">
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Preço padrão</label>
             <input
+              type="text"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '' || /^-?[0-9]*[,.]?[0-9]*$/.test(v)) setPrice(v);
+              }}
               inputMode="decimal"
               placeholder="Ex: 59,90"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
@@ -298,8 +302,12 @@ export const ProductsCatalogManager: React.FC = () => {
                           <div className="sm:col-span-2">
                             <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Preço</label>
                             <input
+                              type="text"
                               value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value)}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^-?[0-9]*[,.]?[0-9]*$/.test(v)) setEditPrice(v);
+                              }}
                               inputMode="decimal"
                               placeholder="Ex: 59,90"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
