@@ -33,7 +33,7 @@ export const ProductsCatalogManager: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editPrice, setEditPrice] = useState<string>('0');
+  const [editPrice, setEditPrice] = useState<string>('');
   const [editSku, setEditSku] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
