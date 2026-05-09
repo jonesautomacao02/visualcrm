@@ -125,7 +125,7 @@ export const ProductsCatalogManager: React.FC = () => {
   const startEdit = (p: Product) => {
     setEditingId(p.id);
     setEditName(p.name || '');
-    setEditPrice(String(p.price ?? 0));
+    setEditPrice(String(p.price ?? 0).replace('.', ','));
     setEditSku(p.sku || '');
     setEditDescription(p.description || '');
   };
@@ -227,12 +227,9 @@ export const ProductsCatalogManager: React.FC = () => {
             <input
               type="text"
               value={price}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === '' || /^-?[0-9]*[,.]?[0-9]*$/.test(v)) setPrice(v);
-              }}
+              onChange={(e) => setPrice(e.target.value)}
               inputMode="decimal"
-              placeholder="Ex: 59,90"
+              placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
           </div>
@@ -304,12 +301,9 @@ export const ProductsCatalogManager: React.FC = () => {
                             <input
                               type="text"
                               value={editPrice}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (v === '' || /^-?[0-9]*[,.]?[0-9]*$/.test(v)) setEditPrice(v);
-                              }}
+                              onChange={(e) => setEditPrice(e.target.value)}
                               inputMode="decimal"
-                              placeholder="Ex: 59,90"
+                              placeholder="0,00"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
                           </div>
