@@ -4,27 +4,25 @@ import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
-// Normaliza qualquer input de preço para o formato "59,90":
-// - descarta tudo antes do primeiro dígito (ex: "R$ ")
-// - trata o PRIMEIRO caractere não-numérico como separador decimal
-//   (funciona com vírgula, ponto, e qualquer variante Unicode enviada pelo teclado)
-// - descarta separadores de milhar e caracteres extras
-function normalizePriceInput(raw: string): string {
-  const start = raw.search(/\d/);
-  if (start === -1) return '';
-  const s = raw.slice(start);
-  // Divide em: dígitos antes do separador | separador (qualquer char não-dígito) | resto
-  const match = s.match(/^(\d*?)([^\d]?)(\d*)$/);
-  if (!match) return s.replace(/\D/g, '');
-  const [, intPart, sep, decPart] = match;
-  if (!sep) return intPart; // sem separador: só inteiros
-  return intPart + ',' + decPart.slice(0, 2); // limita a 2 casas decimais
+// Aceita vírgula (pt-BR) ou ponto (en-US) como separador decimal.
+// "59,90" → 59.9 | "59.90" → 59.9 | "1.234,56" → 1234.56 | "" → 0
+function parseDecimal(val: string): number {
+  const clean = val.replace(/[^\d,.]/g, '');
+  if (!clean) return 0;
+  const lastComma = clean.lastIndexOf(',');
+  const lastPeriod = clean.lastIndexOf('.');
+  const normalized =
+    lastComma > lastPeriod
+      ? clean.replace(/\./g, '').replace(',', '.') // pt-BR: 1.234,56
+      : clean.replace(/,/g, '');                    // en-US: 1,234.56
+  const n = parseFloat(normalized);
+  return Number.isNaN(n) ? 0 : n;
 }
 
-// Converte string normalizada para número. "59,90" → 59.9 | "" → 0
-function parseDecimal(val: string): number {
-  const n = parseFloat(val.replace(',', '.'));
-  return Number.isNaN(n) ? 0 : n;
+// Formata número para exibição pt-BR no campo: 59.9 → "59,90"
+function formatPriceDisplay(val: number): string {
+  if (!val) return '';
+  return val.toFixed(2).replace('.', ',');
 }
 
 /**
@@ -243,7 +241,8 @@ export const ProductsCatalogManager: React.FC = () => {
             <input
               type="text"
               value={price}
-              onChange={(e) => setPrice(normalizePriceInput(e.target.value))}
+              onChange={(e) => setPrice(e.target.value)}
+              onBlur={(e) => { const v = parseDecimal(e.target.value); if (v > 0) setPrice(formatPriceDisplay(v)); }}
               placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
@@ -316,7 +315,8 @@ export const ProductsCatalogManager: React.FC = () => {
                             <input
                               type="text"
                               value={editPrice}
-                              onChange={(e) => setEditPrice(normalizePriceInput(e.target.value))}
+                              onChange={(e) => setEditPrice(e.target.value)}
+                              onBlur={(e) => { const v = parseDecimal(e.target.value); if (v > 0) setEditPrice(formatPriceDisplay(v)); }}
                               placeholder="0,00"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
