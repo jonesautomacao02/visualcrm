@@ -10,6 +10,9 @@ const repoRoot = configDir.includes('/.claude/worktrees/')
   : configDir;
 
 const nextConfig: NextConfig = {
+  // TypeScript roda separadamente via npm run precheck / CI.
+  // Desabilitar no build evita OOM crash na fase de tsc dentro do next build.
+  typescript: { ignoreBuildErrors: true },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },
