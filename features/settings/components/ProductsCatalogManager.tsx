@@ -238,6 +238,7 @@ export const ProductsCatalogManager: React.FC = () => {
               placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
+            {price && <p className="text-[11px] text-slate-400 mt-0.5">{formatCurrency(parseDecimal(price))}</p>}
           </div>
           <div className="lg:col-span-2">
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">SKU (opcional)</label>
