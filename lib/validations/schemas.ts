@@ -75,12 +75,30 @@ export const optionalLongString = z
   .optional()
   .transform(val => val || '');
 
-export const currencySchema = z.coerce
-  .number({ message: msg('NUMBER_REQUIRED', { field: 'Valor' }) })
-  .min(0, msg('NUMBER_MUST_BE_POSITIVE', { field: 'Valor' }))
-  .max(999999999999, 'Valor máximo excedido') // Max ~1 trillion
-  .optional()
-  .transform(val => val ?? 0);
+// Normaliza string de moeda pt-BR ("59,90") ou en-US ("59.90") para number antes do Zod validar.
+// Necessário porque inputs type="text" entregam string ao RHF; z.coerce.number() rejeita vírgula.
+function parseCurrencyString(val: unknown): unknown {
+  if (typeof val === 'number') return val;
+  if (typeof val !== 'string' || !val.trim()) return undefined;
+  const clean = val.replace(/[^\d,.]/g, '');
+  if (!clean) return undefined;
+  const lastComma = clean.lastIndexOf(',');
+  const lastPeriod = clean.lastIndexOf('.');
+  const normalized = lastComma > lastPeriod
+    ? clean.replace(/\./g, '').replace(',', '.')
+    : clean.replace(/,/g, '');
+  const n = parseFloat(normalized);
+  return isNaN(n) ? undefined : n;
+}
+
+export const currencySchema = z.preprocess(
+  parseCurrencyString,
+  z.number({ message: msg('NUMBER_REQUIRED', { field: 'Valor' }) })
+    .min(0, msg('NUMBER_MUST_BE_POSITIVE', { field: 'Valor' }))
+    .max(999999999999, 'Valor máximo excedido')
+    .optional()
+    .transform(val => val ?? 0)
+);
 
 /**
  * Função pública `requiredSelect` do projeto.

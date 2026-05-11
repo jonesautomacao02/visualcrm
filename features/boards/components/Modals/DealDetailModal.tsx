@@ -489,7 +489,6 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     <input
                       autoFocus
                       type="text"
-                      inputMode="decimal"
                       className="text-lg font-mono font-bold text-primary-600 dark:text-primary-400 bg-white dark:bg-black/20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 w-36 outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="0,00"
                       value={editValue}

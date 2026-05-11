@@ -117,11 +117,11 @@ export const CreateDealModalV2: React.FC<CreateDealModalV2Props> = ({ isOpen, on
 
         <div className="grid grid-cols-2 gap-4">
           <InputField
-            label="Valor Estimado ($)"
-            type="number"
-            placeholder="0.00"
+            label="Valor Estimado"
+            type="text"
+            placeholder="0,00"
             error={errors.value}
-            registration={register('value', { valueAsNumber: true })}
+            registration={register('value')}
           />
           <InputField
             label="Empresa"

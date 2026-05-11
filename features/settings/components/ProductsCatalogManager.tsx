@@ -5,24 +5,17 @@ import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatCurrency';
 
 // Aceita vírgula (pt-BR) ou ponto (en-US) como separador decimal.
-// "59,90" → 59.9 | "59.90" → 59.9 | "1.234,56" → 1234.56 | "" → 0
+// "59,90"→59.9 | "59.90"→59.9 | "1.234,56"→1234.56 | ""→0
 function parseDecimal(val: string): number {
   const clean = val.replace(/[^\d,.]/g, '');
   if (!clean) return 0;
   const lastComma = clean.lastIndexOf(',');
   const lastPeriod = clean.lastIndexOf('.');
-  const normalized =
-    lastComma > lastPeriod
-      ? clean.replace(/\./g, '').replace(',', '.') // pt-BR: 1.234,56
-      : clean.replace(/,/g, '');                    // en-US: 1,234.56
+  const normalized = lastComma > lastPeriod
+    ? clean.replace(/\./g, '').replace(',', '.')
+    : clean.replace(/,/g, '');
   const n = parseFloat(normalized);
   return Number.isNaN(n) ? 0 : n;
-}
-
-// Formata número para exibição pt-BR no campo: 59.9 → "59,90"
-function formatPriceDisplay(val: number): string {
-  if (!val) return '';
-  return val.toFixed(2).replace('.', ',');
 }
 
 /**
@@ -242,7 +235,6 @@ export const ProductsCatalogManager: React.FC = () => {
               type="text"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              onBlur={(e) => { const v = parseDecimal(e.target.value); if (v > 0) setPrice(formatPriceDisplay(v)); }}
               placeholder="0,00"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
@@ -316,7 +308,6 @@ export const ProductsCatalogManager: React.FC = () => {
                               type="text"
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value)}
-                              onBlur={(e) => { const v = parseDecimal(e.target.value); if (v > 0) setEditPrice(formatPriceDisplay(v)); }}
                               placeholder="0,00"
                               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                             />
